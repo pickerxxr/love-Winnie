@@ -22,7 +22,11 @@ def update(x, y, dx, dy, col):
 
 
 def updateHelper(value, col, opcol):
-    if match(value, [])
+    # 连五行
+    if match(value, [col, col, col, col, col]):
+        return 10000
+    if match(value, [0, 1, 1, 1, 1, 0]):
+        return
 
 
 def match(l1, l2):
