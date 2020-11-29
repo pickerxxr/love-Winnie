@@ -1,3 +1,5 @@
+import copy
+
 MAX_BOARD = 100
 board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 shape = {0: ".", 1: "o", 2: "*", 3: "#"}
@@ -6,10 +8,15 @@ shape = {0: ".", 1: "o", 2: "*", 3: "#"}
 class nothing:
     width = 20
     height = 20
-
-
 pp = nothing()
+
+
 ########################## self defined function ##############################################################
+class State:
+    def __init__(self, board, space, values_my, values_oppo):
+        self.board = copy.deepcopy(board)
+        self.space = space[::]
+
 # 某些需要引用的全局变量
 values_my = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
 values_oppo = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
@@ -18,7 +25,7 @@ values_oppo[10][10] = 1
 
 
 # 如果棋盘上一个位置被更新，那么周围的点的值都要被更新
-def updateAll(valuesUpdate, x, y, col):
+def updateAll(valuesUpdate, board, x, y, col):
     valuesUpdate[x][y] = -1000
     for dx in [-1, 0, 1]:
         for dy in [-1, 0, 1]:
@@ -28,12 +35,12 @@ def updateAll(valuesUpdate, x, y, col):
                         and board[x + num * dx][y + num * dy] != 3 - col \
                         and 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
                     if board[x + num * dx][y + num * dy] == 0:
-                        valuesUpdate[x + num * dx][y + num * dy] = updateOne(x=x + num * dx, y=y + num * dy, col=col)
+                        valuesUpdate[x + num * dx][y + num * dy] = updateOne(board=board, x=x + num * dx, y=y + num * dy, col=col)
                     num += 1
 
 
 # 想要更新某一个位置的值，要对四个方向进行考虑
-def updateOne(x, y, col):
+def updateOne(board, x, y, col):
     value = []
     for dx, dy in [(1, 0), (0, 1), (-1, 1), (1, 1)]:
         valueOne = []
@@ -127,6 +134,8 @@ def maxValueIndex():
                 maxY = y
                 maxV = max(values_my[x][y], values_oppo[x][y] - 1)
     return maxX, maxY
+
+
 
 
 ######################## other function ###################################
