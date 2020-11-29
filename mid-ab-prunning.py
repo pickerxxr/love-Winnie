@@ -15,7 +15,7 @@ board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 ########################## self defined function ##############################################################
 values = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for all values
 dvalue = [[[0 for k in range(8)] for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
-
+1
 
 def update(x, y, dx, dy, col):
     value = []
