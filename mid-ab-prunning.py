@@ -13,22 +13,99 @@ MAX_BOARD = 100
 board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 
 ########################## self defined function ##############################################################
-values = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for all values
-dvalue = [[[0 for k in range(8)] for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
+values1 = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
+values2 = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
+
 1
+# 如果棋盘上一个位置被更新，那么周围的点的值都要被更新
+def updateAll(valuesUpdate, x, y, col):
+    valuesUpdate[x][y] = -1000
+    for dx in [-1, 0, 1]:
+        for dy in [-1, 0, 1]:
+            if dx or dy:
+                num = 4
+                nowY = x + dx
+                nowX = y + dy
+                while num > 0 and board[nowX][nowY] not in [3 - col, 3]:
+                    valuesUpdate[nowX][nowY] = updateOne(nowX, nowY, col)
+                    num -= 1
 
-def update(x, y, dx, dy, col):
-    value = []
+
+# 更新某一个位置的值，要对四个方向进行考虑
+def updateOne(x, y, col):
+    d = {0: 0, col: col, 3 - col: 3 - col, 3: 2}
+    value1 = [d[board[x][y - 4]], d[board[x][y - 3]], d[board[x][y - 2]], d[board[x][y - 1]],
+              col, d[board[x][y + 1]], d[board[x][y + 2]], d[board[x][y + 3]], d[board[x][y + 4]]]
+    value2 = [d[board[x - 4][y - 4]], d[board[x - 3][y - 3]], d[board[x - 2][y - 2]], d[board[x - 1][y - 1]],
+              col, d[board[x + 1][y + 1]], d[board[x + 2][y + 2]], d[board[x + 3][y + 3]],
+              d[board[x + 4][y + 4]]]
+    value3 = [d[board[x + 4][y - 4]], d[board[x + 3][y - 3]], d[board[x + 2][y - 2]], d[board[x + 1][y - 1]],
+              col, d[board[x - 1][y + 1]], d[board[x - 2][y + 2]], d[board[x - 3][y + 3]],
+              d[board[x - 4][y + 4]]]
+    value4 = [d[board[x - 4][y]], d[board[x - 3][y]], d[board[x - 2][y]], d[board[x - 1][y]],
+              col, d[board[x + 1][y]], d[board[x + 2][y]], d[board[x + 3][y]],
+              d[board[x + 4][y]]]
+    value = [updateHelper(value1, col), updateHelper(value2, col), updateHelper(value3, col), updateHelper(value4, col)]
+    if 5 in value:
+        return 100000
+    elif 41 in value or value.count(42) == 2 or (42 in value and 31 in value):
+        return 100000
+    elif value.count(31) == 2:
+        return 5000
+    elif 31 in value and 32 in value:
+        return 1000
+    elif 41 in value:
+        return 500
+    elif 31 in value:
+        return 200
+    elif value.count(21) == 2:
+        return 100
+    elif 32 in value:
+        return 50
+    elif 21 in value and 22 in value:
+        return 10
+    elif 21 in value:
+        return 5
+    elif 22 in value:
+        return 2
+    else:
+        return 0
 
 
-def updateHelper(value, col, opcol):
+# 判断某一行/列/斜列属于哪种情况
+def updateHelper(value, col):
     # 连五行
     if match(value, [col, col, col, col, col]):
-        return 10000
-    if match(value, [0, 1, 1, 1, 1, 0]):
-        return
+        return 5
+    # 活四
+    elif match(value, [0, col, col, col, col, 0]):
+        return 41
+    # 冲四
+    elif match(value, [0, col, col, col, col]) or match(value, [col, col, col, col, 0]):
+        return 42
+    # 眠四/死四
+    elif match(value, [col, col, col, col]):
+        return 43
+    # 连活三
+    elif match(value, [0, 0, col, col, col, 0]) or match(value, [0, col, col, col, 0, 0]):
+        return 311
+    # 跳活三
+    elif match(value, [0, col, 0, col, col, 0]) or match(value, [0, col, col, 0, col, 0]):
+        return 312
+    # 眠三
+    elif match(value, [col, col, col, 0, 0]) or match(value, [0, 0, col, col, col]):
+        return 32
+    # 活二
+    elif match(value, [0, 0, col, col, 0, 0]) or match(value, [0, col, col, 0, 0, 0]) or match(0, 0, 0, col, col, 0):
+        return 21
+    # 眠二
+    elif match(value, [col, col, 0, 0, 0]) or match(0, 0, 0, col, col):
+        return 22
+    else:
+        return 0
 
 
+# 这是一个较为通用的匹配函数
 def match(l1, l2):
     return l1[0:5] == l2 or l1[1:6] == l2 or l1[2:7] == l2 or l1[3:8] == l2 or l1[4:9] == l2
 
