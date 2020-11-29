@@ -41,24 +41,24 @@ def updateOne(x, y, col):
     for dx, dy in [(1, 0), (0, 1), (-1, 1), (1, 1)]:
         valueOne = []
         for num in range(-4, 0):
-            if x + num * dx >= 0 and x + num * dx < pp.width and y + num * dy >= 0 and y + num * dy < pp.height:
+            if 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
                 valueOne.append(board[x + num * dx][y + num * dy])
         valueOne.append(col)
         for num in range(1, 5):
-            if x + num * dx >= 0 and x + num * dx < pp.width and y + num * dy >= 0 and y + num * dy < pp.height:
+            if 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
                 valueOne.append(board[x + num * dx][y + num * dy])
         value.append(updateHelper(valueOne, col))
     if 5 in value:
         return 100000
-    elif 41 in value or value.count(42) == 2 or (42 in value and 31 in value):
+    elif 41 in value or value.count(42) == 2 or (42 in value and (311 in value or 312 in value)):
         return 100000
     elif value.count(31) == 2:
         return 5000
-    elif 31 in value and 32 in value:
+    elif (311 in value or 312 in value) and 32 in value:
         return 1000
     elif 41 in value:
         return 500
-    elif 31 in value:
+    elif 311 in value:
         return 200
     elif value.count(21) == 2:
         return 100
@@ -98,12 +98,13 @@ def updateHelper(value, col):
     elif match(value, [col, col, col, 0, 0]) or match(value, [0, 0, col, col, col]):
         return 32
     # 活二
-    elif match(value, [0, 0, col, col, 0, 0]) or match(value, [0, col, col, 0, 0, 0]) or match(value,
-                                                                                               [0, 0, 0, col, col, 0]):
+    elif match(value, [0, 0, col, col, 0, 0]) or match(value, [0, col, col, 0, 0, 0]) or \
+            match(value, [0, 0, 0, col, col, 0]):
         return 21
     # 眠二
     elif match(value, [col, col, 0, 0, 0]) or match(value, [0, 0, 0, col, col]):
         return 22
+    # 其他乱七八糟的情况
     else:
         return 0
 
@@ -124,12 +125,11 @@ def maxValueIndex():
     maxV = -100
     for x in range(pp.width):
         for y in range(pp.height):
-            if values_my[x][y] > maxV:
+            if max(values_my[x][y], values_oppo[x][y] - 1) > maxV:
                 maxX = x
                 maxY = y
-                maxV = values_my[x][y]
+                maxV = max(values_my[x][y], values_oppo[x][y] - 1)
     return maxX, maxY
-
 
 ########################### changed function ####################################################################
 def brain_my(x, y):
