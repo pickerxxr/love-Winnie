@@ -13,10 +13,13 @@ MAX_BOARD = 100
 board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 
 ########################## self defined function ##############################################################
-values1 = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
-values2 = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
+# 某些需要引用的全局变量
+values_my = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
+values_oppo = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
+oppo_x = -1
+oppo_y = -1
 
-1
+
 # 如果棋盘上一个位置被更新，那么周围的点的值都要被更新
 def updateAll(valuesUpdate, x, y, col):
     valuesUpdate[x][y] = -1000
@@ -26,26 +29,21 @@ def updateAll(valuesUpdate, x, y, col):
                 num = 4
                 nowY = x + dx
                 nowX = y + dy
-                while num > 0 and board[nowX][nowY] not in [3 - col, 3]:
-                    valuesUpdate[nowX][nowY] = updateOne(nowX, nowY, col)
+                while num > 0 and board[nowX][nowY] != 3 and 0 <= nowX < pp.width and 0 <= nowY < pp.height:
+                    valuesUpdate[nowX][nowY] = updateOne(x=nowX, y=nowY, col=col)
                     num -= 1
 
 
 # 更新某一个位置的值，要对四个方向进行考虑
 def updateOne(x, y, col):
     d = {0: 0, col: col, 3 - col: 3 - col, 3: 2}
-    value1 = [d[board[x][y - 4]], d[board[x][y - 3]], d[board[x][y - 2]], d[board[x][y - 1]],
-              col, d[board[x][y + 1]], d[board[x][y + 2]], d[board[x][y + 3]], d[board[x][y + 4]]]
-    value2 = [d[board[x - 4][y - 4]], d[board[x - 3][y - 3]], d[board[x - 2][y - 2]], d[board[x - 1][y - 1]],
-              col, d[board[x + 1][y + 1]], d[board[x + 2][y + 2]], d[board[x + 3][y + 3]],
-              d[board[x + 4][y + 4]]]
-    value3 = [d[board[x + 4][y - 4]], d[board[x + 3][y - 3]], d[board[x + 2][y - 2]], d[board[x + 1][y - 1]],
-              col, d[board[x - 1][y + 1]], d[board[x - 2][y + 2]], d[board[x - 3][y + 3]],
-              d[board[x - 4][y + 4]]]
-    value4 = [d[board[x - 4][y]], d[board[x - 3][y]], d[board[x - 2][y]], d[board[x - 1][y]],
-              col, d[board[x + 1][y]], d[board[x + 2][y]], d[board[x + 3][y]],
-              d[board[x + 4][y]]]
-    value = [updateHelper(value1, col), updateHelper(value2, col), updateHelper(value3, col), updateHelper(value4, col)]
+    value = []
+    for dx, dy in [(1, 0), (0, 1), (-1, 1), (1, 1)]:
+        valueOne = []
+        for num in range(-4, 5):
+            if x + num * dx >= 0 and x + num * dx < pp.width and y + num * dy >= 0 and y + num * dy < pp.height:
+                valueOne.append(d[board[x + num * dx][y + num * dy]])
+        value.append(updateHelper(valueOne, col))
     if 5 in value:
         return 100000
     elif 41 in value or value.count(42) == 2 or (42 in value and 31 in value):
@@ -107,10 +105,31 @@ def updateHelper(value, col):
 
 # 这是一个较为通用的匹配函数
 def match(l1, l2):
-    return l1[0:5] == l2 or l1[1:6] == l2 or l1[2:7] == l2 or l1[3:8] == l2 or l1[4:9] == l2
+    if len(l2) > len(l1):
+        return False
+    for i in range(len(l1) - len(l2) + 1):
+        if l1[i:(i + len(l2))] == l2:
+            return True
+    return False
 
 
 ########################### changed function ####################################################################
+def brain_my(x, y):
+    if isFree(x, y):
+        board[x][y] = 1
+        updateAll(valuesUpdate=values_oppo, x=x, y=y, col=2)
+        updateAll(valuesUpdate=values_my, x=x, y=y, col=1)
+    else:
+        pp.pipeOut("ERROR my move [{},{}]".format(x, y))
+
+
+def brain_opponents(x, y):
+    if isFree(x, y):
+        board[x][y] = 2
+        updateAll(valuesUpdate=values_oppo, x=x, y=y, col=2)
+        updateAll(valuesUpdate=values_my, x=x, y=y, col=1)
+    else:
+        pp.pipeOut("ERROR opponents's move [{},{}]".format(x, y))
 
 
 ########################### unchanged function ##################################################################
@@ -133,20 +152,6 @@ def brain_restart():
 
 def isFree(x, y):
     return x >= 0 and y >= 0 and x < pp.width and y < pp.height and board[x][y] == 0
-
-
-def brain_my(x, y):
-    if isFree(x, y):
-        board[x][y] = 1
-    else:
-        pp.pipeOut("ERROR my move [{},{}]".format(x, y))
-
-
-def brain_opponents(x, y):
-    if isFree(x, y):
-        board[x][y] = 2
-    else:
-        pp.pipeOut("ERROR opponents's move [{},{}]".format(x, y))
 
 
 def brain_block(x, y):
