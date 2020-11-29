@@ -16,9 +16,10 @@ board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 values1 = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
 values2 = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
 
-
+1
 # 如果棋盘上一个位置被更新，那么周围的点的值都要被更新
 def updateAll(valuesUpdate, x, y, col):
+    valuesUpdate[x][y] = -1000
     for dx in [-1, 0, 1]:
         for dy in [-1, 0, 1]:
             if dx or dy:
@@ -27,6 +28,7 @@ def updateAll(valuesUpdate, x, y, col):
                 nowX = y + dy
                 while num > 0 and board[nowX][nowY] not in [3 - col, 3]:
                     valuesUpdate[nowX][nowY] = updateOne(nowX, nowY, col)
+                    num -= 1
 
 
 # 更新某一个位置的值，要对四个方向进行考虑
