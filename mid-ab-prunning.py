@@ -13,8 +13,8 @@ MAX_BOARD = 100
 board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 
 ########################## self defined function ##############################################################
-values = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for all values
-dvalue = [[[0 for k in range(8)] for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
+values1 = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
+values2 = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
 
 
 # 如果棋盘上一个位置被更新，那么周围的点的值都要被更新
