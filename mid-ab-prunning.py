@@ -1,7 +1,7 @@
 # -------------命令测试
 # piskvork.exe -p xxx.exe FIVEROW.zip -opening 1 -rule 0 -memory 512 -timeturn 15000 -timematch 90
 # -------------编译指令
-# pyinstaller example.py pisqpipe.py --name pbrain-pyrandom.exe --onefile
+# pyinstaller mid-ab-prunning.py pisqpipe.py --name pbrain-pyrandom.exe --onefile
 
 import time
 import pisqpipe as pp
@@ -135,7 +135,6 @@ def brain_my(x, y):
         board[x][y] = 1
         updateAll(valuesUpdate=values_oppo, x=x, y=y, col=2)
         updateAll(valuesUpdate=values_my, x=x, y=y, col=1)
-        time.sleep(2)
     else:
         pp.pipeOut("ERROR my move [{},{}]".format(x, y))
 
@@ -145,7 +144,6 @@ def brain_opponents(x, y):
         board[x][y] = 2
         updateAll(valuesUpdate=values_oppo, x=x, y=y, col=2)
         updateAll(valuesUpdate=values_my, x=x, y=y, col=1)
-        time.sleep(2)
     else:
         pp.pipeOut("ERROR opponents's move [{},{}]".format(x, y))
 
