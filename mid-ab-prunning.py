@@ -26,13 +26,13 @@ def updateAll(valuesUpdate, x, y, col):
     for dx in [-1, 0, 1]:
         for dy in [-1, 0, 1]:
             if dx or dy:
-                num = 4
-                nowY = x + dx
-                nowX = y + dy
-                while num > 0 and board[nowX][nowY] != 3 and 0 <= nowX < pp.width and 0 <= nowY < pp.height:
-                    if board[nowX][nowY] == 0:
-                        valuesUpdate[nowX][nowY] = updateOne(x=nowX, y=nowY, col=col)
-                    num -= 1
+                num = 1
+                while num <= 4 and board[x + num * dx][y + num * dy] != 3 \
+                        and board[x + num * dx][y + num * dy] != 3 - col \
+                        and 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
+                    if board[x + num * dx][y + num * dy] == 0:
+                        valuesUpdate[x + num * dx][y + num * dy] = updateOne(x=x + num * dx, y=y + num * dy, col=col)
+                    num += 1
 
 
 # 想要更新某一个位置的值，要对四个方向进行考虑
@@ -117,6 +117,7 @@ def match(l1, l2):
             return True
     return False
 
+
 def maxValueIndex():
     maxX = -1
     maxY = -1
@@ -128,6 +129,7 @@ def maxValueIndex():
                 maxY = y
                 maxV = values_my[x][y]
     return maxX, maxY
+
 
 ########################### changed function ####################################################################
 def brain_my(x, y):
