@@ -2,7 +2,7 @@
 # piskvork.exe -p xxx.exe FIVEROW.zip -opening 1 -rule 0 -memory 512 -timeturn 15000 -timematch 90
 # -------------编译指令
 # pyinstaller mid-ab-prunning.py pisqpipe.py --name pbrain-pyrandom.exe --onefile
-
+import time
 import copy
 import pisqpipe as pp
 from pisqpipe import DEBUG_EVAL, DEBUG
@@ -140,12 +140,7 @@ def maxValueIndex(values_my, values_oppo):
     return maxX, maxY
 
 
-def restart():
-    board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
-    values_my = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
-    values_oppo = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
-    values_my[10][10] = 1
-    values_oppo[10][10] = 1
+
 
 
 ########################### changed function ####################################################################
@@ -184,10 +179,13 @@ def brain_turn():
 
 
 def brain_restart():
-    restart()
     for x in range(pp.width):
         for y in range(pp.height):
             board[x][y] = 0
+            values_oppo[x][y] = -1
+            values_my[x][y] = -1
+    values_my[10][10] = 1
+    values_oppo[10][10] = 1
     pp.pipeOut("OK")
 
 
