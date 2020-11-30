@@ -2,7 +2,6 @@
 # piskvork.exe -p xxx.exe FIVEROW.zip -opening 1 -rule 0 -memory 512 -timeturn 15000 -timematch 90
 # -------------编译指令
 # pyinstaller mid-ab-prunning.py pisqpipe.py --name pbrain-pyrandom.exe --onefile
-import time
 import copy
 import pisqpipe as pp
 from pisqpipe import DEBUG_EVAL, DEBUG
