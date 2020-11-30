@@ -140,9 +140,6 @@ def maxValueIndex(values_my, values_oppo):
     return maxX, maxY
 
 
-
-
-
 ########################### changed function ####################################################################
 def brain_my(x, y):
     if isFree(x, y):

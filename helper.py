@@ -8,6 +8,8 @@ shape = {0: ".", 1: "o", 2: "*", 3: "#"}
 class nothing:
     width = 20
     height = 20
+
+
 pp = nothing()
 
 
@@ -138,51 +140,71 @@ def maxValueIndex(values_my, values_oppo):
     return maxX, maxY
 
 
-
-
 ######################## other function ###################################
 def printboard():
-    print("################################################")
-    print("  ", end="")
-    for x in range(pp.width):
-        print(x % 10, end=" ")
-    print()
-    for y in range(pp.height):
-        print(y % 10, end=" ")
-        for x in range(pp.height):
-            print(shape[board[x][y]], end=" ")
+    if printBoard:
+        print("################################################")
+        print("  ", end="")
+        for x in range(pp.width):
+            print(x % 10, end=" ")
         print()
-    print()
+        for y in range(pp.height):
+            print(y % 10, end=" ")
+            for x in range(pp.height):
+                print(shape[board[x][y]], end=" ")
+            print()
+        print()
+
 
 def printboardvalue():
-    print("################################################")
-    print("  ", end="")
-    for x in range(pp.width):
-        print(x % 10, end=" ")
-    print()
-    for y in range(pp.height):
-        print(y % 10, end=" ")
-        for x in range(pp.height):
-            print(shape[board[x][y]], end=" ")
+    if printMyValue or printOppoValue:
+        print(
+            "##########################################################################################################")
+        print("  ", end="")
+        for x in range(pp.width):
+            print(x % 10, end="       ")
         print()
-    print()
+        for y in range(pp.height):
+            print(y % 10, end="       ")
+            for x in range(pp.height):
+                print(shape[board[x][y]], end="")
+                if printMyValue:
+                    print(max(values_my[x][y], values_oppo[x][y] - 1),
+                          end=" " * (7 - len(str(max(values_my[x][y], values_oppo[x][y] - 1)))))
+                if printOppoValue:
+                    print(max(values_my[x][y] - 1, values_oppo[x][y]),
+                          end=" " * (7 - len(str(max(values_my[x][y], values_oppo[x][y] - 1)))))
+            print()
+        print()
 
-play_col = 2
-while True:
-    printboard()
-    if play_col == 2:
-        y, x = str.split(input("输入行，列，空格分开"), " ")
-        x = int(x)
-        y = int(y)
-        board[x][y] = play_col
-        updateAll(values_my, board, x, y, 1)
-        updateAll(values_oppo, board, x, y, 2)
+
+def main_():
+    global play_col
+    while run:
         printboard()
-        play_col = 3 - play_col
-    else:
-        x, y = maxValueIndex(values_my, values_oppo)
-        board[x][y] = play_col
-        updateAll(values_my, board, x, y, 1)
-        updateAll(values_oppo, board, x, y, 2)
-        printboard()
-        play_col = 3 - play_col
+        printboardvalue()
+        if play_col == 2:
+            y, x = str.split(input("输入行，列，空格分开"), " ")
+            x = int(x)
+            y = int(y)
+            board[x][y] = play_col
+            updateAll(values_my, board, x, y, 1)
+            updateAll(values_oppo, board, x, y, 2)
+            printboard()
+            play_col = 3 - play_col
+        else:
+            x, y = maxValueIndex(values_my, values_oppo)
+            board[x][y] = play_col
+            updateAll(values_my, board, x, y, 1)
+            updateAll(values_oppo, board, x, y, 2)
+            printboard()
+            play_col = 3 - play_col
+
+
+###################################################################################################
+run = 1
+play_col = 1  # 1为后下，否则先下
+printBoard = 0
+printMyValue = 1
+printOppoValue = 0
+main_()
