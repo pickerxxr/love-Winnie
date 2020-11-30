@@ -3,7 +3,7 @@
 # -------------编译指令
 # pyinstaller mid-ab-prunning.py pisqpipe.py --name pbrain-pyrandom.exe --onefile
 
-import time
+import copy
 import pisqpipe as pp
 from pisqpipe import DEBUG_EVAL, DEBUG
 
@@ -12,7 +12,14 @@ pp.infotext = 'name="pbrain-pyrandom", author="Jan Stransky", version="1.0", cou
 MAX_BOARD = 100
 board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 
+
 ########################## self defined function ##############################################################
+class State:
+    def __init__(self, board, space, values_my, values_oppo):
+        self.board = copy.deepcopy(board)
+        self.space = space[::]
+
+
 # 某些需要引用的全局变量
 values_my = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
 values_oppo = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
@@ -21,44 +28,45 @@ values_oppo[10][10] = 1
 
 
 # 如果棋盘上一个位置被更新，那么周围的点的值都要被更新
-def updateAll(valuesUpdate, x, y, col):
+def updateAll(valuesUpdate, board, x, y, col):
     valuesUpdate[x][y] = -1000
     for dx in [-1, 0, 1]:
         for dy in [-1, 0, 1]:
             if dx or dy:
-                num = 4
-                nowY = x + dx
-                nowX = y + dy
-                while num > 0 and board[nowX][nowY] != 3 and 0 <= nowX < pp.width and 0 <= nowY < pp.height:
-                    if board[nowX][nowY] == 0:
-                        valuesUpdate[nowX][nowY] = updateOne(x=nowX, y=nowY, col=col)
-                    num -= 1
+                num = 1
+                while num <= 4 and board[x + num * dx][y + num * dy] != 3 \
+                        and board[x + num * dx][y + num * dy] != 3 - col \
+                        and 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
+                    if board[x + num * dx][y + num * dy] == 0:
+                        valuesUpdate[x + num * dx][y + num * dy] = updateOne(board=board, x=x + num * dx,
+                                                                             y=y + num * dy, col=col)
+                    num += 1
 
 
 # 想要更新某一个位置的值，要对四个方向进行考虑
-def updateOne(x, y, col):
+def updateOne(board, x, y, col):
     value = []
     for dx, dy in [(1, 0), (0, 1), (-1, 1), (1, 1)]:
         valueOne = []
         for num in range(-4, 0):
-            if x + num * dx >= 0 and x + num * dx < pp.width and y + num * dy >= 0 and y + num * dy < pp.height:
+            if 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
                 valueOne.append(board[x + num * dx][y + num * dy])
         valueOne.append(col)
         for num in range(1, 5):
-            if x + num * dx >= 0 and x + num * dx < pp.width and y + num * dy >= 0 and y + num * dy < pp.height:
+            if 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
                 valueOne.append(board[x + num * dx][y + num * dy])
         value.append(updateHelper(valueOne, col))
     if 5 in value:
         return 100000
-    elif 41 in value or value.count(42) == 2 or (42 in value and 31 in value):
-        return 100000
+    elif 41 in value or value.count(42) == 2 or (42 in value and (311 in value or 312 in value)):
+        return 10000
     elif value.count(31) == 2:
         return 5000
-    elif 31 in value and 32 in value:
+    elif (311 in value or 312 in value) and 32 in value:
         return 1000
     elif 41 in value:
         return 500
-    elif 31 in value:
+    elif 311 in value:
         return 200
     elif value.count(21) == 2:
         return 100
@@ -98,12 +106,13 @@ def updateHelper(value, col):
     elif match(value, [col, col, col, 0, 0]) or match(value, [0, 0, col, col, col]):
         return 32
     # 活二
-    elif match(value, [0, 0, col, col, 0, 0]) or match(value, [0, col, col, 0, 0, 0]) or match(value,
-                                                                                               [0, 0, 0, col, col, 0]):
+    elif match(value, [0, 0, col, col, 0, 0]) or match(value, [0, col, col, 0, 0, 0]) or \
+            match(value, [0, 0, 0, col, col, 0]):
         return 21
     # 眠二
     elif match(value, [col, col, 0, 0, 0]) or match(value, [0, 0, 0, col, col]):
         return 22
+    # 其他乱七八糟的情况
     else:
         return 0
 
@@ -117,24 +126,34 @@ def match(l1, l2):
             return True
     return False
 
-def maxValueIndex():
+
+def maxValueIndex(values_my, values_oppo):
     maxX = -1
     maxY = -1
     maxV = -100
     for x in range(pp.width):
         for y in range(pp.height):
-            if values_my[x][y] > maxV:
+            if max(values_my[x][y], values_oppo[x][y] - 1) > maxV:
                 maxX = x
                 maxY = y
-                maxV = values_my[x][y]
+                maxV = max(values_my[x][y], values_oppo[x][y] - 1)
     return maxX, maxY
+
+
+def restart():
+    board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
+    values_my = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
+    values_oppo = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
+    values_my[10][10] = 1
+    values_oppo[10][10] = 1
+
 
 ########################### changed function ####################################################################
 def brain_my(x, y):
     if isFree(x, y):
         board[x][y] = 1
-        updateAll(valuesUpdate=values_oppo, x=x, y=y, col=2)
-        updateAll(valuesUpdate=values_my, x=x, y=y, col=1)
+        updateAll(valuesUpdate=values_oppo, board=board, x=x, y=y, col=2)
+        updateAll(valuesUpdate=values_my, board=board, x=x, y=y, col=1)
     else:
         pp.pipeOut("ERROR my move [{},{}]".format(x, y))
 
@@ -142,17 +161,18 @@ def brain_my(x, y):
 def brain_opponents(x, y):
     if isFree(x, y):
         board[x][y] = 2
-        updateAll(valuesUpdate=values_oppo, x=x, y=y, col=2)
-        updateAll(valuesUpdate=values_my, x=x, y=y, col=1)
+        updateAll(valuesUpdate=values_oppo, board=board, x=x, y=y, col=2)
+        updateAll(valuesUpdate=values_my, board=board, x=x, y=y, col=1)
     else:
         pp.pipeOut("ERROR opponents's move [{},{}]".format(x, y))
+
 
 def brain_turn():
     if pp.terminateAI:
         return
     i = 0
     while True:
-        x, y = maxValueIndex()
+        x, y = maxValueIndex(values_my=values_my, values_oppo=values_oppo)
         i += 1
         if pp.terminateAI:
             return
@@ -161,7 +181,18 @@ def brain_turn():
     if i > 1:
         pp.pipeOut("DEBUG {} coordinates didn't hit an empty field".format(i))
     pp.do_mymove(x, y)
+
+
+def brain_restart():
+    restart()
+    for x in range(pp.width):
+        for y in range(pp.height):
+            board[x][y] = 0
+    pp.pipeOut("OK")
+
+
 ########################### unchanged function ##################################################################
+
 def brain_init():
     if pp.width < 5 or pp.height < 5:
         pp.pipeOut("ERROR size of the board")
@@ -169,13 +200,6 @@ def brain_init():
     if pp.width > MAX_BOARD or pp.height > MAX_BOARD:
         pp.pipeOut("ERROR Maximal board size is {}".format(MAX_BOARD))
         return
-    pp.pipeOut("OK")
-
-
-def brain_restart():
-    for x in range(pp.width):
-        for y in range(pp.height):
-            board[x][y] = 0
     pp.pipeOut("OK")
 
 
@@ -195,6 +219,7 @@ def brain_takeback(x, y):
         board[x][y] = 0
         return 0
     return 2
+
 
 def brain_end():
     pass
