@@ -17,6 +17,7 @@ class State:
         self.board = copy.deepcopy(board)
         self.space = space[::]
 
+
 # 某些需要引用的全局变量
 values_my = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
 values_oppo = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
@@ -35,7 +36,8 @@ def updateAll(valuesUpdate, board, x, y, col):
                         and board[x + num * dx][y + num * dy] != 3 - col \
                         and 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
                     if board[x + num * dx][y + num * dy] == 0:
-                        valuesUpdate[x + num * dx][y + num * dy] = updateOne(board=board, x=x + num * dx, y=y + num * dy, col=col)
+                        valuesUpdate[x + num * dx][y + num * dy] = updateOne(board=board, x=x + num * dx,
+                                                                             y=y + num * dy, col=col)
                     num += 1
 
 
@@ -123,7 +125,7 @@ def match(l1, l2):
     return False
 
 
-def maxValueIndex():
+def maxValueIndex(values_my, values_oppo):
     maxX = -1
     maxY = -1
     maxV = -100
@@ -152,6 +154,18 @@ def printboard():
         print()
     print()
 
+def printboardvalue():
+    print("################################################")
+    print("  ", end="")
+    for x in range(pp.width):
+        print(x % 10, end=" ")
+    print()
+    for y in range(pp.height):
+        print(y % 10, end=" ")
+        for x in range(pp.height):
+            print(shape[board[x][y]], end=" ")
+        print()
+    print()
 
 play_col = 2
 while True:
@@ -161,14 +175,14 @@ while True:
         x = int(x)
         y = int(y)
         board[x][y] = play_col
-        updateAll(values_my, x, y, 1)
-        updateAll(values_oppo, x, y, 2)
+        updateAll(values_my, board, x, y, 1)
+        updateAll(values_oppo, board, x, y, 2)
         printboard()
         play_col = 3 - play_col
     else:
-        x, y = maxValueIndex()
+        x, y = maxValueIndex(values_my, values_oppo)
         board[x][y] = play_col
-        updateAll(values_my, x, y, 1)
-        updateAll(values_oppo, x, y, 2)
+        updateAll(values_my, board, x, y, 1)
+        updateAll(values_oppo, board, x, y, 2)
         printboard()
         play_col = 3 - play_col

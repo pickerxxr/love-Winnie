@@ -12,11 +12,13 @@ pp.infotext = 'name="pbrain-pyrandom", author="Jan Stransky", version="1.0", cou
 MAX_BOARD = 100
 board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 
+
 ########################## self defined function ##############################################################
 class State:
     def __init__(self, board, space, values_my, values_oppo):
         self.board = copy.deepcopy(board)
         self.space = space[::]
+
 
 # 某些需要引用的全局变量
 values_my = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
@@ -36,7 +38,8 @@ def updateAll(valuesUpdate, board, x, y, col):
                         and board[x + num * dx][y + num * dy] != 3 - col \
                         and 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
                     if board[x + num * dx][y + num * dy] == 0:
-                        valuesUpdate[x + num * dx][y + num * dy] = updateOne(board=board, x=x + num * dx, y=y + num * dy, col=col)
+                        valuesUpdate[x + num * dx][y + num * dy] = updateOne(board=board, x=x + num * dx,
+                                                                             y=y + num * dy, col=col)
                     num += 1
 
 
@@ -56,7 +59,7 @@ def updateOne(board, x, y, col):
     if 5 in value:
         return 100000
     elif 41 in value or value.count(42) == 2 or (42 in value and (311 in value or 312 in value)):
-        return 100000
+        return 10000
     elif value.count(31) == 2:
         return 5000
     elif (311 in value or 312 in value) and 32 in value:
@@ -137,6 +140,14 @@ def maxValueIndex(values_my, values_oppo):
     return maxX, maxY
 
 
+def restart():
+    board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
+    values_my = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
+    values_oppo = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
+    values_my[10][10] = 1
+    values_oppo[10][10] = 1
+
+
 ########################### changed function ####################################################################
 def brain_my(x, y):
     if isFree(x, y):
@@ -172,7 +183,16 @@ def brain_turn():
     pp.do_mymove(x, y)
 
 
+def brain_restart():
+    restart()
+    for x in range(pp.width):
+        for y in range(pp.height):
+            board[x][y] = 0
+    pp.pipeOut("OK")
+
+
 ########################### unchanged function ##################################################################
+
 def brain_init():
     if pp.width < 5 or pp.height < 5:
         pp.pipeOut("ERROR size of the board")
@@ -180,13 +200,6 @@ def brain_init():
     if pp.width > MAX_BOARD or pp.height > MAX_BOARD:
         pp.pipeOut("ERROR Maximal board size is {}".format(MAX_BOARD))
         return
-    pp.pipeOut("OK")
-
-
-def brain_restart():
-    for x in range(pp.width):
-        for y in range(pp.height):
-            board[x][y] = 0
     pp.pipeOut("OK")
 
 
