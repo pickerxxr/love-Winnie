@@ -270,7 +270,9 @@ def brain_restart():
     for x in range(pp.width):
         for y in range(pp.height):
             board[x][y] = 0
-    STATE = [(set(), set()), None, 1, 20]
+    STATE[0][0] = set()
+    STATE[0][1] = set()
+    STATE[1] = None
     pp.pipeOut("OK")
 
 
