@@ -1,5 +1,3 @@
-import copy
-
 shape = {0: ".", 1: "o", 2: "*", 3: "#"}
 
 
@@ -14,16 +12,16 @@ pp = nothing()
 ########################## self defined function ##############################################################
 class State:
     def __init__(self, board_, space_, values_my_, values_oppo_, depth, col=1):
-        self.board = copy.deepcopy(board_)
+        self.board = [i[::] for i in board_]
         self.space = space_[::]
-        self.values_my = copy.deepcopy(values_my_)
-        self.values_oppo = copy.deepcopy(values_oppo_)
+        self.values_my = [i[::] for i in values_my_]
+        self.values_oppo = [i[::] for i in values_oppo_]
         self.depth = depth
         self.col = col
 
     def Update(self, x, y, col):
         self.board[x][y] = col
-        UpdateSpace(self.space, x, y)
+        UpdateSpace(self.space, self.board, x, y)
         UpdateAllLocation(self.values_my, self.board, x, y, 1)
         UpdateAllLocation(self.values_oppo, self.board, x, y, 2)
 
@@ -37,24 +35,34 @@ class State:
             states.append(newstate)
         return states
 
-    def MaxValueIndex(self):
-        maxvalue = -1000
-        maxx = -1
-        maxy = -1
+    def StateValue(self):
+        myvalue = -float("Inf")
+        myx = -1
+        myy = -1
+        oppovalue = -float("Inf")
+        oppox = -1
+        oppoy = -1
         for x, y in self.space:
-            if max(self.values_my[x][y] + 1, self.values_oppo[x][y]) > maxvalue:
-                maxx = x
-                maxy = y
-                maxvalue = max(self.values_my[x][y] + 1, self.values_oppo[x][y])
-        return maxvalue, maxx, maxy
+            if self.values_my[x][y] > myvalue:
+                myvalue = self.values_my[x][y]
+                myx = x
+                myy = y
+            if self.values_oppo[x][y] > oppovalue:
+                oppovalue = self.values_oppo[x][y]
+                oppox = x
+                oppoy = y
+        if myvalue < oppovalue:
+            return (-oppovalue, oppox, oppoy)
+        else:
+            return (myvalue, myx, myy)
 
     def Value(self, alpha=-float("Inf"), beta=float("Inf")):
         if self.depth >= MAX_DEPTH:
-            return self.MaxValueIndex()
-        elif self.col == 1:
-            return self.Max_Value(alpha, beta)
-        else:
+            return self.StateValue()
+        elif self.col == 2:
             return self.Min_Value(alpha, beta)
+        else:
+            return self.Max_Value(alpha, beta)
 
     def Max_Value(self, alpha, beta):
         lastmove = None
@@ -95,8 +103,8 @@ board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 # pp.width/pp.height
 # 游戏添加变量
 SPACE = [(10, 10)]
-MAX_DEPTH = 2
-MAX_WIDTH = 2
+MAX_DEPTH = 3
+MAX_WIDTH = 1
 VALUES_MY = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
 VALUES_OPPO = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
 VALUES_MY[10][10] = 1
@@ -125,11 +133,11 @@ def UpdateOneLocation(board_, x, y, col):
     value = []
     for dx, dy in [(1, 0), (0, 1), (-1, 1), (1, 1)]:
         valueOne = []
-        for num in range(-4, 0):
+        for num in range(-5, 0):
             if 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
                 valueOne.append(board_[x + num * dx][y + num * dy])
         valueOne.append(col)
-        for num in range(1, 5):
+        for num in range(1, 6):
             if 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
                 valueOne.append(board_[x + num * dx][y + num * dy])
         value.append(TypeJudge(valueOne, col))
@@ -204,13 +212,19 @@ def Match(l1, l2):
     return False
 
 
-def UpdateSpace(space_, x, y):
-    for new_x in range(max(0, x - MAX_WIDTH), min(x + MAX_DEPTH + 1, pp.height)):
+def UpdateSpace(space_, board_, x, y):
+    for new_x in range(max(0, x - MAX_WIDTH), min(x + MAX_WIDTH + 1, pp.height)):
         for new_y in range(max(0, y - MAX_WIDTH), min(y + MAX_WIDTH + 1, pp.width)):
-            if (new_x, new_y) not in space_:
+            if (new_x, new_y) not in space_ and board_[new_x][new_y] == 0:
                 space_.append((new_x, new_y))
-    space_.remove((x, y))
+    if (x, y) in space_:
+        space_.remove((x, y))
 
+def direct(space_, value_):
+    for x, y in space_:
+        if value_[x][y] == 100000:
+            return (1, x, y)
+    return (0, 0, 0)
 
 ######################## other function ###################################
 def printboard(state):
@@ -273,7 +287,12 @@ def main_(state):
 ###################################################################################################
 run = 1
 play_col = 2  # 1为后下，否则先下
-printBoard = 0
-printMyValue = 1
+printBoard = 1
+printMyValue = 0
 printOppoValue = 0
 main_(STATE)
+
+# ######################################################################################################
+# STATE.Update(10, 10, 2)
+# print(STATE.space)
+# print(STATE.Value())
