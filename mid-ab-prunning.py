@@ -2,11 +2,11 @@
 # piskvork.exe -p xxx.exe FIVEROW.zip -opening 1 -rule 0 -memory 512 -timeturn 15000 -timematch 90
 # -------------编译指令
 # pyinstaller mid-ab-prunning.py pisqpipe.py --name pbrain-xiaocilao.exe --onefile
-import copy
 import pisqpipe as pp
-from pisqpipe import DEBUG_EVAL, DEBUG
+from pisqpipe import DEBUG_EVAL
 
 pp.infotext = 'name="pbrain-pyrandom", author="Jan Stransky", version="1.0", country="Czech Republic", www="https://github.com/stranskyjan/pbrain-pyrandom"'
+
 
 ########################## self defined function ##############################################################
 class State:
@@ -50,7 +50,7 @@ class State:
                 oppovalue = self.values_oppo[x][y]
                 oppox = x
                 oppoy = y
-        if myvalue < oppovalue:
+        if myvalue <= oppovalue:
             return (-oppovalue, oppox, oppoy)
         else:
             return (myvalue, myx, myy)
@@ -102,7 +102,7 @@ board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 # pp.width/pp.height
 # 游戏添加变量
 SPACE = [(10, 10)]
-MAX_DEPTH = 3
+MAX_DEPTH = 2
 MAX_WIDTH = 1
 VALUES_MY = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
 VALUES_OPPO = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
@@ -219,11 +219,14 @@ def UpdateSpace(space_, board_, x, y):
     if (x, y) in space_:
         space_.remove((x, y))
 
+
 def direct(space_, value_):
     for x, y in space_:
         if value_[x][y] == 100000:
             return (1, x, y)
     return (0, 0, 0)
+
+
 
 
 

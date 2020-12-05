@@ -9,7 +9,7 @@ class nothing:
 pp = nothing()
 
 
-########################## self defined function ##############################################################
+############################## self defined function ##############################################################
 class State:
     def __init__(self, board_, space_, values_my_, values_oppo_, depth, col=1):
         self.board = [i[::] for i in board_]
@@ -51,7 +51,7 @@ class State:
                 oppovalue = self.values_oppo[x][y]
                 oppox = x
                 oppoy = y
-        if myvalue < oppovalue:
+        if myvalue <= oppovalue:
             return (-oppovalue, oppox, oppoy)
         else:
             return (myvalue, myx, myy)
@@ -103,7 +103,7 @@ board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 # pp.width/pp.height
 # 游戏添加变量
 SPACE = [(10, 10)]
-MAX_DEPTH = 3
+MAX_DEPTH = 2
 MAX_WIDTH = 1
 VALUES_MY = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
 VALUES_OPPO = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
@@ -220,11 +220,13 @@ def UpdateSpace(space_, board_, x, y):
     if (x, y) in space_:
         space_.remove((x, y))
 
+
 def direct(space_, value_):
     for x, y in space_:
         if value_[x][y] == 100000:
             return (1, x, y)
     return (0, 0, 0)
+
 
 ######################## other function ###################################
 def printboard(state):
@@ -290,9 +292,29 @@ play_col = 2  # 1为后下，否则先下
 printBoard = 1
 printMyValue = 0
 printOppoValue = 0
-main_(STATE)
+# main_(STATE)
 
 # ######################################################################################################
 # STATE.Update(10, 10, 2)
 # print(STATE.space)
 # print(STATE.Value())
+# STATE.Update(8, 7, 2)
+# STATE.Update(10, 10, 1)
+# STATE.Update(10, 10, 2)
+# print(STATE.StateValue())
+# STATE.Update(8, 7, 2)
+# print(STATE.StateValue())
+# STATE.Update(7, 6, 1)
+# print(STATE.StateValue())
+# STATE.Update(7, 6, 1)
+# print(STATE.StateValue())
+# STATE.Update(7, 6, 1)
+
+STATE.Update(1, 2, 2)
+print(STATE.Value())
+STATE.Update(10, 10, 1)
+STATE.Update(1, 3, 2)
+print(STATE.Value())
+STATE.Update(9, 9, 1)
+STATE.Update(1, 4, 2)
+STATE.Value()
