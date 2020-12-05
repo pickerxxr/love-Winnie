@@ -1,6 +1,5 @@
-import copy
-
 shape = {0: ".", 1: "o", 2: "*", 3: "#"}
+import random
 
 
 class nothing:
@@ -9,207 +8,230 @@ class nothing:
 
 
 pp = nothing()
+MAX_BOARD = 20
+board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 
 
 ########################## self defined function ##############################################################
-class State:
-    def __init__(self, board_, space_, values_my_, values_oppo_, depth, col=1):
-        self.board = copy.deepcopy(board_)
-        self.space = space_[::]
-        self.values_my = copy.deepcopy(values_my_)
-        self.values_oppo = copy.deepcopy(values_oppo_)
-        self.depth = depth
-        self.col = col
 
-    def Update(self, x, y, col):
-        self.board[x][y] = col
-        UpdateSpace(self.space, x, y)
-        UpdateAllLocation(self.values_my, self.board, x, y, 1)
-        UpdateAllLocation(self.values_oppo, self.board, x, y, 2)
+# test_board = ({(8, 8), (9, 9)}, {(8, 9)})
+# test_playing = 1
+# test_last_move = (8, 8)
+# test_board_size = 15
+# test_state = (test_board, test_last_move, test_playing, test_board_size)
 
-    def NextStates(self, col):
-        states = []
-        for x, y in self.space:
-            newstate = State(self.board, self.space, self.values_my, self.values_oppo, depth=self.depth + 1,
-                             col=3 - col)
-            newstate.Update(x, y, col)
-            newstate.lastmove = (x, y)
-            states.append(newstate)
-        return states
+def strategy(state):
+    """ Information provided to you:
+    state = (board, last_move, playing, board_size)
+    board = (x_stones, o_stones)
+    stones is a set contains positions of one player's stones. e.g.
+        x_stones = {(8,8), (8,9), (8,10), (8,11)}
+    playing = 0|1, the current player's index
 
-    def MaxValueIndex(self):
-        maxvalue = -1000
-        maxx = -1
-        maxy = -1
-        for x, y in self.space:
-            if max(self.values_my[x][y] + 1, self.values_oppo[x][y]) > maxvalue:
-                maxx = x
-                maxy = y
-                maxvalue = max(self.values_my[x][y] + 1, self.values_oppo[x][y])
-        return maxvalue, maxx, maxy
+    Your strategy will return a position code for the next stone, e.g. (8,7)
+    """
+    board, last_move, playing, board_size = state
+    if last_move == None:
+        return (board_size / 2 + 1, board_size / 2 + 1)
 
-    def Value(self, alpha=-float("Inf"), beta=float("Inf")):
-        if self.depth >= MAX_DEPTH:
-            return self.MaxValueIndex()
-        elif self.col == 1:
-            return self.Max_Value(alpha, beta)
-        else:
-            return self.Min_Value(alpha, beta)
-
-    def Max_Value(self, alpha, beta):
-        lastmove = None
-        v = -float("Inf")
-        for x, y in self.space:
-            newstate = State(self.board, self.space, self.values_my, self.values_oppo, self.depth + 1, 3 - self.col)
-            newstate.Update(x, y, self.col)
-            newstate.lastmove = (x, y)
-            newvalue = newstate.Value(alpha, beta)[0]
-            if v < newvalue:
-                v = newvalue
-                lastmove = newstate.lastmove
-            alpha = max(alpha, v)
-            if v >= beta:
-                return v, lastmove[0], lastmove[1]
-        return v, lastmove[0], lastmove[1]
-
-    def Min_Value(self, alpha, beta):
-        v = float("Inf")
-        for x, y in self.space:
-            newstate = State(self.board, self.space, self.values_my, self.values_oppo, self.depth + 1, 3 - self.col)
-            newstate.Update(x, y, self.col)
-            newstate.lastmove = (x, y)
-            newvalue = newstate.Value(alpha, beta)[0]
-            if v > newvalue:
-                v = newvalue
-                lastmove = newstate.lastmove
-            beta = min(beta, v)
-            if v <= alpha:
-                return v, lastmove[0], lastmove[1]
-        return v, lastmove[0], lastmove[1]
+    root = construct_tree(state, 0, 2)
+    max_value = float("-inf")
+    best_move = []
+    for successor in root.successor:
+        successor_value = maxValue(successor, float("-inf"), float("inf"))
+        if successor_value > max_value:
+            max_value = successor_value
+            best_move = list(successor.state[0][playing] - board[playing])
+        elif successor_value == max_value:
+            best_move.extend(list(successor.state[0][playing] - board[playing]))
+    if best_move == []:
+        best_move = random.choice(find_avai_position(state))
+    return random.choice(best_move)
 
 
-# 某些需要引用的全局变量
-# 游戏自带变量（不可修改）
-MAX_BOARD = 20
-board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
-# pp.width/pp.height
-# 游戏添加变量
-SPACE = [(10, 10)]
-MAX_DEPTH = 2
-MAX_WIDTH = 2
-VALUES_MY = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
-VALUES_OPPO = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
-VALUES_MY[10][10] = 1
-VALUES_OPPO[10][10] = 1
-STATE = State(board_=board, space_=SPACE, values_my_=VALUES_MY, values_oppo_=VALUES_OPPO, depth=1, col=1)
+def maxValue(node, alpha, beta):
+    if node.isLeaf:
+        return node.value
+    v = float("-inf")
+    for successor in node.successor:
+        v = max(v, minValue(successor, alpha, beta))
+        if v >= beta:
+            return v
+        alpha = max(alpha, v)
+    return v
 
 
-# 如果棋盘上一个位置被更新，那么周围的点的值都要被更新
-def UpdateAllLocation(values_update, board_, x, y, col):
-    values_update[x][y] = -1000
-    for dx in [-1, 0, 1]:
-        for dy in [-1, 0, 1]:
-            if dx or dy:
-                num = 1
-                while num <= 4 and 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height \
-                        and board_[x + num * dx][y + num * dy] != 3 \
-                        and board_[x + num * dx][y + num * dy] != 3 - col:
-                    if board_[x + num * dx][y + num * dy] == 0:
-                        values_update[x + num * dx][y + num * dy] = UpdateOneLocation(board_=board_, x=x + num * dx,
-                                                                                      y=y + num * dy, col=col)
-                    num += 1
+def minValue(node, alpha, beta):
+    if node.isLeaf:
+        return node.value
+    v = float("inf")
+    for successor in node.successor:
+        v = min(v, maxValue(successor, alpha, beta))
+        if v <= alpha:
+            return v
+        beta = min(beta, v)
+    return v
 
 
-# 想要更新某一个位置的值，要对四个方向进行考虑
-def UpdateOneLocation(board_, x, y, col):
-    value = []
-    for dx, dy in [(1, 0), (0, 1), (-1, 1), (1, 1)]:
-        valueOne = []
-        for num in range(-4, 0):
-            if 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
-                valueOne.append(board_[x + num * dx][y + num * dy])
-        valueOne.append(col)
-        for num in range(1, 5):
-            if 0 <= x + num * dx < pp.width and 0 <= y + num * dy < pp.height:
-                valueOne.append(board_[x + num * dx][y + num * dy])
-        value.append(TypeJudge(valueOne, col))
-    if 5 in value:
+def find_avai_position(state):
+    board, last_move, playing, board_size = state
+    my_stones = board[playing]
+    oppo_stones = board[not playing]
+
+    avai_position = []
+    for stone in my_stones:
+        avai_position.extend(find_around_position(stone))
+    for stone in oppo_stones:
+        avai_position.extend(find_around_position(stone))
+
+    avai_position = set(avai_position)
+    for stone in my_stones:
+        avai_position.remove(stone)
+    for stone in oppo_stones:
+        avai_position.remove(stone)
+    avai_position = {pos for pos in avai_position
+                     if pos[0] in range(1, board_size + 1)
+                     and pos[1] in range(1, board_size + 1)}
+    return avai_position
+
+
+def find_around_position(position):
+    x, y = position
+    return [(x_, y_) for x_ in [x - 1, x, x + 1] for y_ in [y - 1, y, y + 1]]
+
+
+def score(fiveTuple):
+    if len(fiveTuple) != 5:
+        print("ERROR")
+        return None
+    if 1 in fiveTuple and -1 in fiveTuple:
+        return 0
+    elif sum(fiveTuple) == 0:
+        return 7
+    elif sum(fiveTuple) == -1:
+        return -35
+    elif sum(fiveTuple) == -2:
+        return -800
+    elif sum(fiveTuple) == -3:
+        return -15000
+    elif sum(fiveTuple) == -4:
+        return -800000
+    elif sum(fiveTuple) == -5:
+        return -10000000
+    elif sum(fiveTuple) == 1:
+        return 15
+    elif sum(fiveTuple) == 2:
+        return 400
+    elif sum(fiveTuple) == 3:
+        return 1800
+    elif sum(fiveTuple) == 4:
         return 100000
-    elif 41 in value or value.count(42) == 2 or (42 in value and (311 in value or 312 in value)):
-        return 10000
-    elif value.count(31) == 2:
-        return 5000
-    elif (311 in value or 312 in value) and 32 in value:
-        return 1000
-    elif 41 in value:
-        return 500
-    elif 311 in value:
-        return 200
-    elif value.count(21) == 2:
-        return 100
-    elif 32 in value:
-        return 50
-    elif 21 in value and 22 in value:
-        return 10
-    elif 21 in value:
-        return 5
-    elif 22 in value:
-        return 2
-    else:
-        return 0
+    elif sum(fiveTuple) == 5:
+        return 10000000
 
 
-# 判断某一行/列/斜列属于哪种情况
-def TypeJudge(value, col):
-    # 连五行
-    if Match(value, [col, col, col, col, col]):
-        return 5
-    # 活四
-    elif Match(value, [0, col, col, col, col, 0]):
-        return 41
-    # 冲四
-    elif Match(value, [0, col, col, col, col]) or Match(value, [col, col, col, col, 0]):
-        return 42
-    # 眠四/死四
-    elif Match(value, [col, col, col, col]):
-        return 43
-    # 连活三
-    elif Match(value, [0, 0, col, col, col, 0]) or Match(value, [0, col, col, col, 0, 0]):
-        return 311
-    # 跳活三
-    elif Match(value, [0, col, 0, col, col, 0]) or Match(value, [0, col, col, 0, col, 0]):
-        return 312
-    # 眠三
-    elif Match(value, [col, col, col, 0, 0]) or Match(value, [0, 0, col, col, col]):
-        return 32
-    # 活二
-    elif Match(value, [0, 0, col, col, 0, 0]) or Match(value, [0, col, col, 0, 0, 0]) or \
-            Match(value, [0, 0, 0, col, col, 0]):
-        return 21
-    # 眠二
-    elif Match(value, [col, col, 0, 0, 0]) or Match(value, [0, 0, 0, col, col]):
-        return 22
-    # 其他乱七八糟的情况
-    else:
-        return 0
+def get_value(state):
+    board, last_move, playing, board_size = state
+    row = board_size
+    col = board_size
+    # create a table to record the board state
+    # 1: occupied by self
+    # -1: occupied by opponent
+    # 0: available
+    table = [[0 for i in range(col)] for j in range(row)]
+    for i in range(row):
+        for j in range(col):
+            if playing == 1:
+                if (i + 1, j + 1) in board[0]:
+                    table[i][j] = -1
+                elif (i + 1, j + 1) in board[1]:
+                    table[i][j] = 1
+            else:
+                if (i + 1, j + 1) in board[0]:
+                    table[i][j] = 1
+                elif (i + 1, j + 1) in board[1]:
+                    table[i][j] = -1
+    sumScore = 0
+    for i in range(row):
+        for j in range(col):
+            if j + 4 < col:
+                sumScore += score(tuple(table[i][j:j + 5]))
+            if i + 4 < row:
+                sumScore += score(
+                    tuple([table[i][j], table[i + 1][j], table[i + 2][j], table[i + 3][j], table[i + 4][j]]))
+            if i + 4 < row and j + 4 < col:
+                fivetuple = []
+                for k in range(5):
+                    fivetuple.append(table[i + k][j + k])
+                sumScore += score(tuple(fivetuple))
+            if i + 4 < row and j - 4 >= 0:
+                fivetuple = []
+                for k in range(5):
+                    fivetuple.append(table[i + k][j - k])
+                sumScore += score(tuple(fivetuple))
+    return sumScore
 
 
-# 这是一个较为通用的匹配函数
-def Match(l1, l2):
-    if len(l2) > len(l1):
-        return False
-    for i in range(len(l1) - len(l2) + 1):
-        if l1[i:(i + len(l2))] == l2:
-            return True
-    return False
+class Node:
+    def __init__(self, state, depth, limitedDepth, successor=[], isLeaf=False, value=None):
+        self.state = state
+        self.depth = depth
+        self.limitedDepth = limitedDepth
+        self.successor = successor
+        self.isLeaf = isLeaf
+        self.value = value
+
+    def __repr__(self):
+        info = '========= Node Info ========'
+        depth = 'depth:' + str(self.depth)
+        limitedDepth = 'limitedDepth:' + str(self.limitedDepth)
+        isLeaf = 'isLeaf:' + str(self.isLeaf)
+        value = 'value:' + str(self.value)
+        state = 'state:' + str(self.state)
+        successor = 'successors:' + str(len(self.successor))
+        return '\n'.join([info, depth, limitedDepth, isLeaf, value, state, successor, '\n'])
 
 
-def UpdateSpace(space_, x, y):
-    for new_x in range(max(0, x - MAX_WIDTH), min(x + MAX_DEPTH + 1, pp.height)):
-        for new_y in range(max(0, y - MAX_WIDTH), min(y + MAX_WIDTH + 1, pp.width)):
-            if (new_x, new_y) not in space_:
-                space_.append((new_x, new_y))
-    space_.remove((x, y))
+def construct_tree(state, depth, limitedDepth):
+    board, last_move, playing, board_size = state
+    oppo_stones = board[not playing].copy()
+
+    tree_root = Node(state, depth, limitedDepth, successor=[])
+
+    if depth == limitedDepth:
+        tree_root.isLeaf = True
+        tree_root.value = get_value(state)
+        return tree_root
+
+    avai_position = find_avai_position(state)
+    for position in avai_position:
+        my_stones = board[playing].copy()
+        my_stones.add(position)
+        if playing == 0:
+            new_board = (my_stones, oppo_stones)
+            next_playing = 1
+        else:
+            new_board = (oppo_stones, my_stones)
+            next_playing = 0
+        new_state = (new_board, position, next_playing, board_size)
+        tree_root.successor.append(construct_tree(new_state, depth + 1, limitedDepth))
+    return tree_root
+
+
+def finish():
+    pass
+
+
+STATE = [(set(), set()), None, 1, 20]
+
+
+# import time
+# start = time.clock()
+# print strategy(test_state)
+# end = time.clock()
+# print start
+# print end
+# print end-start
 
 
 ######################## other function ###################################
@@ -223,7 +245,7 @@ def printboard(state):
         for y in range(pp.height):
             print(y % 10, end=" ")
             for x in range(pp.height):
-                print(shape[state.board[x][y]], end=" ")
+                print(shape[board[x][y]], end=" ")
             print()
         print()
 
@@ -240,12 +262,6 @@ def printboardvalue(state):
             print(y % 10, end="       ")
             for x in range(pp.height):
                 print(shape[state.board[x][y]], end="")
-                if printMyValue:
-                    print(max(state.values_my[x][y], state.values_oppo[x][y] - 1),
-                          end=" " * (7 - len(str(max(state.values_my[x][y], state.values_oppo[x][y] - 1)))))
-                if printOppoValue:
-                    print(max(state.VALUES_MY[x][y] - 1, state.VALUES_OPPO[x][y]),
-                          end=" " * (7 - len(str(max(state.values_my[x][y], state.values_oppo[x][y] - 1)))))
             print()
         print()
 
@@ -254,26 +270,29 @@ def main_(state):
     global play_col
     while run:
         printboard(state)
-        printboardvalue(state)
         if play_col == 2:
             y, x = str.split(input("输入行，列，空格分开"), " ")
             x = int(x)
             y = int(y)
-            state.Update(x, y, play_col)
+            STATE[0][1].add((int(x), int(y)))
+            STATE[1] = (x, y)
+            board[x][y] = 2
             printboard(state)
             play_col = 3 - play_col
         else:
-            v, x, y = state.Value()
-            board[x][y] = play_col
-            state.Update(x, y, play_col)
-            printboard(state)
+            x, y = strategy(state)
+            state[0][0].add((int(x), int(y)))
+            state[1] = (x, y)
+            board[x][y] = 1
             play_col = 3 - play_col
 
 
 ###################################################################################################
 run = 1
 play_col = 2  # 1为后下，否则先下
-printBoard = 0
-printMyValue = 1
+printBoard = 1
+printMyValue = 0
 printOppoValue = 0
 main_(STATE)
+
+######################################################################################################
