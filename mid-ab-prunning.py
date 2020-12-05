@@ -4,14 +4,12 @@
 # pyinstaller mid-ab-prunning.py pisqpipe.py --name pbrain-xiaocilao.exe --onefile
 import pisqpipe as pp
 from pisqpipe import DEBUG_EVAL
-import numpy as np
 import random
 
 pp.infotext = 'name="pbrain-pyrandom", author="Jan Stransky", version="1.0", country="Czech Republic", www="https://github.com/stranskyjan/pbrain-pyrandom"'
 MAX_BOARD = 20
 board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 ########################## self defined function ##############################################################
-
 
 # test_board = ({(8, 8), (9, 9)}, {(8, 9)})
 # test_playing = 1
@@ -137,35 +135,36 @@ def get_value(state):
     # 1: occupied by self
     # -1: occupied by opponent
     # 0: available
-    table = np.zeros([row, col])
+    table = [[0 for i in range(col)] for j in range(row)]
     for i in range(row):
         for j in range(col):
             if playing == 1:
                 if (i + 1, j + 1) in board[0]:
-                    table[i, j] = -1
+                    table[i][j] = -1
                 elif (i + 1, j + 1) in board[1]:
-                    table[i, j] = 1
+                    table[i][j] = 1
             else:
                 if (i + 1, j + 1) in board[0]:
-                    table[i, j] = 1
+                    table[i][j] = 1
                 elif (i + 1, j + 1) in board[1]:
-                    table[i, j] = -1
+                    table[i][j] = -1
     sumScore = 0
     for i in range(row):
         for j in range(col):
             if j + 4 < col:
-                sumScore += score(tuple(table[i, j:j + 5]))
+                sumScore += score(tuple(table[i][j:j + 5]))
             if i + 4 < row:
-                sumScore += score(tuple(table[i:i + 5, j]))
+                sumScore += score(
+                    tuple([table[i][j], table[i + 1][j], table[i + 2][j], table[i + 3][j], table[i + 4][j]]))
             if i + 4 < row and j + 4 < col:
                 fivetuple = []
                 for k in range(5):
-                    fivetuple.append(table[i + k, j + k])
+                    fivetuple.append(table[i + k][j + k])
                 sumScore += score(tuple(fivetuple))
             if i + 4 < row and j - 4 >= 0:
                 fivetuple = []
                 for k in range(5):
-                    fivetuple.append(table[i + k, j - k])
+                    fivetuple.append(table[i + k][j - k])
                 sumScore += score(tuple(fivetuple))
     return sumScore
 
@@ -230,6 +229,7 @@ STATE = [(set(), set()), None, 1, 20]
 # print start
 # print end
 # print end-start
+
 
 ########################### changed function ####################################################################
 def brain_my(x, y):
