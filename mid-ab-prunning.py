@@ -102,8 +102,8 @@ board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 # pp.width/pp.height
 # 游戏添加变量
 SPACE = [(10, 10)]
-MAX_DEPTH = 2
-MAX_WIDTH = 1
+MAX_DEPTH = 1
+MAX_WIDTH = 3
 VALUES_MY = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 1
 VALUES_OPPO = [[-1 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]  # rate for color 2
 VALUES_MY[10][10] = 1
@@ -225,9 +225,6 @@ def direct(space_, value_):
         if value_[x][y] == 100000:
             return (1, x, y)
     return (0, 0, 0)
-
-
-
 
 
 ########################### changed function ####################################################################
