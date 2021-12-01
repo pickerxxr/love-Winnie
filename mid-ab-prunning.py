@@ -1,6 +1,6 @@
-# -------------命令测试
+# Test:
 # piskvork.exe -p xxx.exe FIVEROW.zip -opening 1 -rule 0 -memory 512 -timeturn 15000 -timematch 90
-# -------------编译指令
+# Execute:
 # pyinstaller mid-ab-prunning.py pisqpipe.py --name pbrain-xiaocilao.exe --onefile
 import copy
 import pisqpipe as pp
@@ -8,7 +8,7 @@ from pisqpipe import DEBUG_EVAL, DEBUG
 
 pp.infotext = 'name="pbrain-pyrandom", author="Jan Stransky", version="1.0", country="Czech Republic", www="https://github.com/stranskyjan/pbrain-pyrandom"'
 
-########################## self defined function ##############################################################
+########################## self defined function ###########################
 class State:
     def __init__(self, board_, space_, values_my_, values_oppo_, depth, col=1):
         self.board = [i[::] for i in board_]
@@ -95,12 +95,12 @@ class State:
         return v, lastmove[0], lastmove[1]
 
 
-# 某些需要引用的全局变量
-# 游戏自带变量（不可修改）
+# global init
+# initial vars
 MAX_BOARD = 20
 board = [[0 for i in range(MAX_BOARD)] for j in range(MAX_BOARD)]
 # pp.width/pp.height
-# 游戏添加变量
+# vars
 SPACE = [(10, 10)]
 MAX_DEPTH = 3
 MAX_WIDTH = 1
@@ -111,7 +111,7 @@ VALUES_OPPO[10][10] = 1
 STATE = State(board_=board, space_=SPACE, values_my_=VALUES_MY, values_oppo_=VALUES_OPPO, depth=1, col=1)
 
 
-# 如果棋盘上一个位置被更新，那么周围的点的值都要被更新
+# If one state is refreshed, the neighbors also need refresh
 def UpdateAllLocation(values_update, board_, x, y, col):
     values_update[x][y] = -1000
     for dx in [-1, 0, 1]:
@@ -127,7 +127,7 @@ def UpdateAllLocation(values_update, board_, x, y, col):
                     num += 1
 
 
-# 想要更新某一个位置的值，要对四个方向进行考虑
+# refresh in four directions
 def UpdateOneLocation(board_, x, y, col):
     value = []
     for dx, dy in [(1, 0), (0, 1), (-1, 1), (1, 1)]:
@@ -166,7 +166,8 @@ def UpdateOneLocation(board_, x, y, col):
         return 0
 
 
-# 判断某一行/列/斜列属于哪种情况
+# All the cases and heuristcs design
+# Chinese terminology for Go
 def TypeJudge(value, col):
     # 连五行
     if Match(value, [col, col, col, col, col]):
@@ -201,7 +202,7 @@ def TypeJudge(value, col):
         return 0
 
 
-# 这是一个较为通用的匹配函数
+# Match function
 def Match(l1, l2):
     if len(l2) > len(l1):
         return False
@@ -227,7 +228,7 @@ def direct(space_, value_):
 
 
 
-########################### changed function ####################################################################
+########################### changed function ###############################
 def brain_my(x, y):
     if isFree(x, y):
         STATE.Update(x, y, 1)
@@ -274,7 +275,7 @@ def brain_restart():
     pp.pipeOut("OK")
 
 
-########################### unchanged function ##################################################################
+########################### unchanged function ###########################
 
 def brain_init():
     if pp.width < 5 or pp.height < 5:
