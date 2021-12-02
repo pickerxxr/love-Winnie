@@ -1,7 +1,7 @@
 """
-AI name: xiaocilao
+AI agent name: xiaocilao
 Version: 2020.1.18.3
-Author: Zhenyu Xu, Youzhe Liu
+Author: Youzhe Liu
 Course: Introduction to artificial intelligence
 Guider: Zhongyu Wei
 Basic idea: Combine MCT with MinMaxSearch and return a valid move to guide the GOMOKU AI

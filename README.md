@@ -7,7 +7,7 @@ Details of the algorithms & methods we use:
 - Kill threats algorithm implementation
 - Originally designed heuristics
 
-Youzhe Liu, Zhenyu Xu
+> Youzhe Liu youzheliu18@fudan.edu.cn
 
 
 
